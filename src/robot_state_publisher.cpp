@@ -127,7 +127,8 @@ RobotStatePublisher::RobotStatePublisher(const rclcpp::NodeOptions & options)
   this->declare_parameter("ignore_timestamp", false);
 
   tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(this);
-  static_tf_broadcaster_ = std::make_unique<tf2_ros::StaticTransformBroadcaster>(this);
+  
+  // static_tf_broadcaster_ = std::make_unique<tf2_ros::StaticTransformBroadcaster>(this);
 
   description_pub_ = this->create_publisher<std_msgs::msg::String>(
     "robot_description",
@@ -147,7 +148,12 @@ RobotStatePublisher::RobotStatePublisher(const rclcpp::NodeOptions & options)
     std::bind(&RobotStatePublisher::callbackJointState, this, std::placeholders::_1),
     subscriber_options);
 
-  publishFixedTransforms();
+  // Create a timer to publish static tfs
+  auto publish_interval_ms_= std::chrono::milliseconds(static_cast<uint64_t>(1000.0 / publish_freq));
+
+  timer_ = this->create_wall_timer(publish_interval_ms_,
+                                   std::bind(&RobotStatePublisher::publishFixedTransforms, this));
+
 
   // Now that we have successfully declared the parameters and done all
   // necessary setup, install the callback for updating parameters.
@@ -292,7 +298,7 @@ void RobotStatePublisher::publishFixedTransforms()
     tf_transform.child_frame_id = frame_prefix + seg.second.tip;
     tf_transforms.push_back(tf_transform);
   }
-  static_tf_broadcaster_->sendTransform(tf_transforms);
+  tf_broadcaster_->sendTransform(tf_transforms);
 }
 
 void RobotStatePublisher::callbackJointState(
