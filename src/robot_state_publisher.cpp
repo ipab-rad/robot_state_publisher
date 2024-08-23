@@ -128,7 +128,7 @@ RobotStatePublisher::RobotStatePublisher(const rclcpp::NodeOptions & options)
 
   tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(this);
   
-  // static_tf_broadcaster_ = std::make_unique<tf2_ros::StaticTransformBroadcaster>(this);
+  static_tf_broadcaster_ = std::make_unique<tf2_ros::StaticTransformBroadcaster>(this);
 
   description_pub_ = this->create_publisher<std_msgs::msg::String>(
     "robot_description",
@@ -148,10 +148,14 @@ RobotStatePublisher::RobotStatePublisher(const rclcpp::NodeOptions & options)
     std::bind(&RobotStatePublisher::callbackJointState, this, std::placeholders::_1),
     subscriber_options);
 
+  // Set static pubish frequency
+  double static_publish_freq = this->declare_parameter("static_publish_frequency", 0.5);
+  RCLCPP_INFO(this->get_logger(), "Static TF publish frequency set to: %f",static_publish_freq);
+  
   // Create a timer to publish static tfs
-  auto publish_interval_ms_= std::chrono::milliseconds(static_cast<uint64_t>(1000.0 / publish_freq));
+  auto static_publish_interval_ms_= std::chrono::milliseconds(static_cast<uint64_t>(1000.0 / static_publish_freq));
 
-  timer_ = this->create_wall_timer(publish_interval_ms_,
+  timer_ = this->create_wall_timer(static_publish_interval_ms_,
                                    std::bind(&RobotStatePublisher::publishFixedTransforms, this));
 
 
@@ -298,7 +302,7 @@ void RobotStatePublisher::publishFixedTransforms()
     tf_transform.child_frame_id = frame_prefix + seg.second.tip;
     tf_transforms.push_back(tf_transform);
   }
-  tf_broadcaster_->sendTransform(tf_transforms);
+  static_tf_broadcaster_->sendTransform(tf_transforms);
 }
 
 void RobotStatePublisher::callbackJointState(

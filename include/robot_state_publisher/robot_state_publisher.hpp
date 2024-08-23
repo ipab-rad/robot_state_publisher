@@ -149,7 +149,7 @@ protected:
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
   /// A pointer to the tf2 StaticTransformBroadcaster
-  // std::unique_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_;
+  std::unique_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_;
 
   /// A pointer to the ROS 2 publisher for the robot_description
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr description_pub_;
