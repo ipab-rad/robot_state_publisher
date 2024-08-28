@@ -127,7 +127,6 @@ RobotStatePublisher::RobotStatePublisher(const rclcpp::NodeOptions & options)
   this->declare_parameter("ignore_timestamp", false);
 
   tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(this);
-  
   static_tf_broadcaster_ = std::make_unique<tf2_ros::StaticTransformBroadcaster>(this);
 
   description_pub_ = this->create_publisher<std_msgs::msg::String>(
@@ -149,15 +148,17 @@ RobotStatePublisher::RobotStatePublisher(const rclcpp::NodeOptions & options)
     subscriber_options);
 
   // Set static pubish frequency
-  double static_publish_freq = this->declare_parameter("static_publish_frequency", 0.5);
+  double static_publish_freq = this->declare_parameter("static_publish_frequency", 1.0);
   RCLCPP_INFO(this->get_logger(), "Static TF publish frequency set to: %f",static_publish_freq);
-  
+
   // Create a timer to publish static tfs
   auto static_publish_interval_ms_= std::chrono::milliseconds(static_cast<uint64_t>(1000.0 / static_publish_freq));
 
   timer_ = this->create_wall_timer(static_publish_interval_ms_,
                                    std::bind(&RobotStatePublisher::publishFixedTransforms, this));
 
+  // Make sure fixed TFs are published immediately
+  publishFixedTransforms();
 
   // Now that we have successfully declared the parameters and done all
   // necessary setup, install the callback for updating parameters.
