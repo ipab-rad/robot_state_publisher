@@ -157,6 +157,9 @@ protected:
   /// A pointer to the ROS 2 subscription for the joint states
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
 
+  /// A timer to publish static transforms
+  rclcpp::TimerBase::SharedPtr timer_;
+  
   /// The last time a joint state message was received
   rclcpp::Time last_callback_time_;
 
